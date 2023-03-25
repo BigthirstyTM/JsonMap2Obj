@@ -279,8 +279,9 @@ def PlaceBlocks():
     start = time.time()
 
     # Loop over the blocks and import the corresponding mesh objects
-    for nadeoBlock in blocksJson['nadeoBlocks']:
-        blockName = nadeoBlock['name']
+    all_named_blocks = blocksJson['nadeoBlocks'] + blocksJson['freeModeBlocks']
+    for block in all_named_blocks:
+        blockName = block['name']
         if blockName not in blockNameToMeshObj:
             blockPath = blockNameToObjPath.get(blockName)
             if blockPath:
@@ -316,6 +317,35 @@ def PlaceBlocks():
             # print("Placed", blockName, "at position", realPos)
         else:
             print(blockName, "not in mesh dict")
+
+    # for freeModeBlock in blocksJson['freeModeBlocks']:
+    #     blockName = freeModeBlock['name']
+
+    #     if blockName in blockNameToMeshObj:
+    #         mesh_obj = blockNameToMeshObj[blockName]
+
+    #         position = (freeModeBlock['pos'][0],
+    #                     freeModeBlock['pos'][1], 
+    #                     freeModeBlock['pos'][2])
+
+    #         rotation = Euler((freeModeBlock['rot'][0],
+    #                           freeModeBlock['rot'][1], 
+    #                           freeModeBlock['rot'][2]))
+            
+    #         # Create an instance of the mesh object
+    #         instance = mesh_obj.copy()
+    #         instance.data = mesh_obj.data.copy()
+    #         instance.location = position
+    #         instance.rotation_euler = rotation
+    #         instance.rotation_mode = 'XYZ' # Experiment with rotations, not working yet
+    #         instance.name = blockName
+
+    #         # Link the instance to the current collection
+    #         bpy.context.collection.objects.link(instance)
+
+    #         # print("Placed", blockName, "at position", realPos)
+    #     else:
+    #         print(blockName, "not in mesh dict")
 
     # Remove the imported mesh objects and only keep the instances
     removeGeometryBlocks()
