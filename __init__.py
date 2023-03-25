@@ -368,6 +368,26 @@ def AddTextures():
     end = time.time()
     print("Added textures in", end - start, "seconds")
 
+def RotateBlocks():
+    start = time.time()
+
+    # Set the rotation angle in degrees
+    rotation_angle_degrees = 90
+
+    # Get all the objects in the scene
+    scene_objects = bpy.context.scene.objects
+
+    # Loop through all the objects and rotate them
+    for obj in scene_objects:
+        # Calculate the rotation matrix
+        rotation_matrix = mathutils.Matrix.Rotation(math.radians(rotation_angle_degrees), 4, 'X')
+        
+        # Rotate the object around the world origin
+        obj.matrix_world = rotation_matrix @ obj.matrix_world
+
+    end = time.time()
+    print("Rotated blocks in", end - start, "seconds")
+
 
 def BuildMap():
     """Function to build the map"""
@@ -379,6 +399,9 @@ def BuildMap():
     AddTextures()
 
     removeCollisionsBlocks()
+
+    RotateBlocks()
+
     viewSelectedObjects()
 
 
