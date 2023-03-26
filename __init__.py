@@ -1,5 +1,5 @@
 import bpy
-from bpy.props import StringProperty
+from bpy.props import StringProperty, PointerProperty
 import os
 import mathutils
 from mathutils import Euler
@@ -171,6 +171,17 @@ def getTextures(texturesPath):
 
     print("Found", len(textures), "textures in folder", texturesPath)
 
+
+def CheckUserInputs():
+    if bpy.context.scene.json_file != "":
+        if blocksJson is None:
+            loadMapJson(bpy.context.scene.json_file)
+    if bpy.context.scene.obj_folder != "":
+        if len(blockNameToObjPath) == 0:
+            getBlocksMeshes(bpy.context.scene.obj_folder)
+    if bpy.context.scene.dds_folder != "":
+        if len(textures) == 0:
+            getTextures(bpy.context.scene.dds_folder)
 # MAIN
 
 
@@ -268,6 +279,7 @@ class MyAddonBuildMap(bpy.types.Operator):
     bl_label = "Build map"
 
     def execute(self, context):
+        CheckUserInputs()
         BuildMap()
         return {'FINISHED'}
 
@@ -416,9 +428,14 @@ def RotateBlocks():
 
 def BuildMap():
     """Function to build the map"""
+
     setViewportClipEnd(50000)
     print("Building map...")
+
     deleteAllObjects()
+
+    # clear the mesh object dictionary as it is referencing objects that have been deleted
+    blockNameToMeshObj.clear()
 
     PlaceBlocks()
     AddTextures()
