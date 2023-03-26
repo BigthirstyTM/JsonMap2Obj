@@ -325,13 +325,13 @@ def PlaceBlocks():
     #         mesh_obj = blockNameToMeshObj[blockName]
 
     #         position = (freeModeBlock['pos'][0],
-    #                     freeModeBlock['pos'][1], 
+    #                     freeModeBlock['pos'][1],
     #                     freeModeBlock['pos'][2])
 
     #         rotation = Euler((freeModeBlock['rot'][0],
-    #                           freeModeBlock['rot'][1], 
+    #                           freeModeBlock['rot'][1],
     #                           freeModeBlock['rot'][2]))
-            
+
     #         # Create an instance of the mesh object
     #         instance = mesh_obj.copy()
     #         instance.data = mesh_obj.data.copy()
@@ -398,6 +398,7 @@ def AddTextures():
     end = time.time()
     print("Added textures in", end - start, "seconds")
 
+
 def RotateBlocks():
     start = time.time()
 
@@ -405,7 +406,7 @@ def RotateBlocks():
     for obj in bpy.context.scene.objects:
         # Calculate the rotation matrix
         rotation_matrix = mathutils.Matrix.Rotation(math.radians(90), 4, 'X')
-        
+
         # Rotate the object around the world origin
         obj.matrix_world = rotation_matrix @ obj.matrix_world
 
