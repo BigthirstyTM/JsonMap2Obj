@@ -285,6 +285,19 @@ class MyAddonBuildMap(bpy.types.Operator):
         return {'FINISHED'}
 
 
+# Convert Pitch, Yaw, Roll tp Euler angles, quickly used ChatGPT formula for euler angles, hope it works
+def euler_angles(pitch, yaw, roll):
+    # Calculate the Euler angles using the Z-Y-X rotation order
+    phi = math.atan2(math.sin(roll) * math.cos(pitch) * math.cos(yaw) + math.sin(pitch) * math.sin(yaw),
+                     math.cos(roll) * math.cos(pitch))
+    theta = math.atan2(math.sin(pitch) * math.cos(yaw),
+                       math.cos(pitch))
+    psi = math.atan2(math.sin(yaw) * math.cos(pitch) * math.cos(roll) + math.sin(pitch) * math.sin(roll),
+                     math.cos(yaw) * math.cos(pitch))
+
+    # Convert the Euler angles back to degrees and return them as a tuple
+    return math.degrees(phi), math.degrees(theta), math.degrees(psi)
+
 # Dictionary to store the imported mesh objects
 
 
@@ -361,6 +374,33 @@ def PlaceBlocks():
     #         # print("Placed", blockName, "at position", realPos)
     #     else:
     #         print(blockName, "not in mesh dict")
+
+    # for anchoredObject in blocksJson["anchoredObjects"]:
+    #     blockName = anchoredObject['name']
+
+    #     position = (anchoredObject['pos'][0],
+    #                 anchoredObject['pos'][1],
+    #                 anchoredObject['pos'][2])
+
+    #     rotation = Euler(euler_angles(anchoredObject['pitch'],
+    #                                   anchoredObject['yaw'],
+    #                                   anchoredObject['roll']))
+
+    #     rotation_mode = 'ZYX'
+
+    #     # Place cube at position of the anchored object, with correct rotation
+    #     bpy.ops.mesh.primitive_cone_add(location=position,
+    #                                     vertices=8,
+    #                                     scale=(2.0, 2.0, 2.0))
+    #     bpy.context.object.rotation_euler = rotation
+    #     bpy.context.object.rotation_mode = rotation_mode
+    #     bpy.context.object.name = blockName
+    #     bpy.context.object.name = blockName
+
+    #     # Color the cube red
+    #     bpy.context.object.data.materials.append(
+    #         bpy.data.materials.new(name="Red"))
+    #     bpy.context.object.data.materials[0].diffuse_color = (1, 0, 0, 1)
 
     # Remove the imported mesh objects and only keep the instances
     removeGeometryBlocks()
