@@ -77,11 +77,12 @@ def viewSelectedObjects():
             bpy.ops.view3d.view_selected(ctx)
 
 
-def setViewportClipEnd(clip_end):
+def setViewportClips(clip_start, clip_end):
     for a in bpy.context.screen.areas:
         if a.type == 'VIEW_3D':
             for s in a.spaces:
                 if s.type == 'VIEW_3D':
+                    s.clip_start = clip_start
                     s.clip_end = clip_end
 
 
@@ -431,7 +432,7 @@ def RotateBlocks():
 def BuildMap():
     """Function to build the map"""
 
-    setViewportClipEnd(50000)
+    setViewportClips(1, 50000)
     print("Building map...")
 
     deleteAllObjects()
