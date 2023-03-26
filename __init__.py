@@ -40,7 +40,7 @@ placedBlockCount = 0
 
 def removeGeometryBlocks():
     for o in bpy.context.scene.objects:
-        if "Geometry." in o.name:
+        if "Geometry" in o.name:
             o.select_set(True)
         else:
             o.select_set(False)
