@@ -340,16 +340,18 @@ def PlaceBlocks():
     #                     freeModeBlock['pos'][1],
     #                     freeModeBlock['pos'][2])
 
-    #         rotation = Euler((freeModeBlock['rot'][0],
-    #                           freeModeBlock['rot'][1],
+    #         rotation = Euler((freeModeBlock['rot'][1],
+    #                           freeModeBlock['rot'][0],
     #                           freeModeBlock['rot'][2]))
+
+    #         rotation_mode = 'ZYX'  # Experiment with rotations, not working yet
 
     #         # Create an instance of the mesh object
     #         instance = mesh_obj.copy()
     #         instance.data = mesh_obj.data.copy()
     #         instance.location = position
     #         instance.rotation_euler = rotation
-    #         instance.rotation_mode = 'XYZ' # Experiment with rotations, not working yet
+    #         instance.rotation_mode = rotation_mode
     #         instance.name = blockName
 
     #         # Link the instance to the current collection
