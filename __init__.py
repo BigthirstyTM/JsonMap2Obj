@@ -344,36 +344,36 @@ def PlaceBlocks():
         else:
             print(blockName, "not in mesh dict")
 
-    # for freeModeBlock in blocksJson['freeModeBlocks']:
-    #     blockName = freeModeBlock['name']
+    for freeModeBlock in blocksJson['freeModeBlocks']:
+        blockName = freeModeBlock['name']
 
-    #     if blockName in blockNameToMeshObj:
-    #         mesh_obj = blockNameToMeshObj[blockName]
+        if blockName in blockNameToMeshObj:
+            mesh_obj = blockNameToMeshObj[blockName]
 
-    #         position = (freeModeBlock['pos'][0],
-    #                     freeModeBlock['pos'][1],
-    #                     freeModeBlock['pos'][2])
+            position = (freeModeBlock['pos'][0],
+                        freeModeBlock['pos'][1],
+                        freeModeBlock['pos'][2])
 
-    #         rotation = Euler((freeModeBlock['rot'][1],
-    #                           freeModeBlock['rot'][0],
-    #                           freeModeBlock['rot'][2]))
+            rotation = Euler((freeModeBlock['rot'][1],
+                              freeModeBlock['rot'][0],
+                              freeModeBlock['rot'][2]))
 
-    #         rotation_mode = 'ZYX'  # Experiment with rotations, not working yet
+            rotation_mode = 'XZY'  # Experiment with rotations, not working yet
 
-    #         # Create an instance of the mesh object
-    #         instance = mesh_obj.copy()
-    #         instance.data = mesh_obj.data.copy()
-    #         instance.location = position
-    #         instance.rotation_euler = rotation
-    #         instance.rotation_mode = rotation_mode
-    #         instance.name = blockName
+            # Create an instance of the mesh object
+            instance = mesh_obj.copy()
+            instance.data = mesh_obj.data.copy()
+            instance.location = position
+            instance.rotation_euler = rotation
+            instance.rotation_mode = rotation_mode
+            instance.name = blockName
 
-    #         # Link the instance to the current collection
-    #         bpy.context.collection.objects.link(instance)
+            # Link the instance to the current collection
+            bpy.context.collection.objects.link(instance)
 
-    #         # print("Placed", blockName, "at position", realPos)
-    #     else:
-    #         print(blockName, "not in mesh dict")
+            # print("Placed", blockName, "at position", realPos)
+        else:
+            print(blockName, "not in mesh dict")
 
     # for anchoredObject in blocksJson["anchoredObjects"]:
     #     blockName = anchoredObject['name']
