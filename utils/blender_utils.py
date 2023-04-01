@@ -1,7 +1,7 @@
 import bpy
 
 
-def removeGeometryBlocks():
+def remove_geometry_blocks():
     for o in bpy.context.scene.objects:
         if "Geometry" in o.name:
             o.select_set(True)
@@ -10,7 +10,7 @@ def removeGeometryBlocks():
     bpy.ops.object.delete()
 
 
-def removeCollisionsBlocks():
+def remove_collisions_blocks():
     for o in bpy.context.scene.objects:
         if "(Collisions)" in o.name:
             o.select_set(True)
@@ -19,7 +19,7 @@ def removeCollisionsBlocks():
     bpy.ops.object.delete()
 
 
-def selectAllObjects():
+def select_all_objects():
     deleteListObjects = ['MESH', 'CURVE', 'SURFACE', 'META', 'FONT', 'HAIR', 'POINTCLOUD', 'VOLUME', 'GPENCIL',
                          'ARMATURE', 'LATTICE', 'EMPTY', 'LIGHT', 'LIGHT_PROBE', 'CAMERA', 'SPEAKER']
     for o in bpy.context.scene.objects:
@@ -30,8 +30,8 @@ def selectAllObjects():
                 o.select_set(True)
 
 
-def viewSelectedObjects():
-    selectAllObjects()
+def view_selected_objects():
+    select_all_objects()
     for area in bpy.context.screen.areas:
         if area.type == 'VIEW_3D':
             ctx = bpy.context.copy()
@@ -40,7 +40,7 @@ def viewSelectedObjects():
             bpy.ops.view3d.view_selected(ctx)
 
 
-def setViewportClips(clip_start, clip_end):
+def set_viewport_clips(clip_start, clip_end):
     for a in bpy.context.screen.areas:
         if a.type == 'VIEW_3D':
             for s in a.spaces:
@@ -49,6 +49,6 @@ def setViewportClips(clip_start, clip_end):
                     s.clip_end = clip_end
 
 
-def deleteAllObjects():
-    selectAllObjects()
+def delete_all_objects():
+    select_all_objects()
     bpy.ops.object.delete()

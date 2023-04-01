@@ -1,3 +1,6 @@
+from .constants import *
+from .utils.blocks_utils import *
+from .utils.blender_utils import *
 from bpy.props import StringProperty, PointerProperty
 import bpy
 import os
@@ -7,9 +10,7 @@ import json
 import math
 import time
 
-
 ADDON_ROOT_PATH = os.path.dirname(__file__)
-
 
 bl_info = {
     "name": "JsonMap2Obj",
@@ -23,91 +24,83 @@ bl_info = {
 }
 
 
-from .utils.BlenderUtils import *
-from .utils.BlocksUtils import *
-from .Constants import *
-
-# CONSTANTS
-
-
 # GLOBALS
 
-blockNameToMeshObj = {}
+block_name_to_mesh_obj = {}
 
-blockNameToObjPath = {}
+block_name_to_obj_path = {}
 textures = {}
 
-blocksJson = None
-totalBlockCount = 0
-placedBlockCount = 0
+blocks_json = None
+total_block_count = 0
+placed_block_count = 0
 
-# selectAllObjects()
-# bpy.ops.object.delete()
 
 # IO UTILS
 
+def load_map_json(json_file_path):
+    global blocks_json
+    with open(json_file_path) as f:
+        blocks_json = json.load(f)
+        nadeo_blocks_length = len(blocks_json['nadeoBlocks'])
+        freemode_blocks_length = len(blocks_json['freeModeBlocks'])
+        anchored_objects_length = len(blocks_json['anchoredObjects'])
 
-def loadMapJson(jsonFilePath):
-    global blocksJson
-    with open(jsonFilePath) as f:
-        blocksJson = json.load(f)
-        nadeoBlocksLength = len(blocksJson['nadeoBlocks'])
-        freeModeBlocksLength = len(blocksJson['freeModeBlocks'])
-        anchoredObjectsLength = len(blocksJson['anchoredObjects'])
+        total_block_count = nadeo_blocks_length + \
+            freemode_blocks_length + \
+            anchored_objects_length
 
-        totalBlockCount = nadeoBlocksLength + \
-            freeModeBlocksLength + anchoredObjectsLength
-        print("Total block count:", str(totalBlockCount))
+        print("Total block count:", str(total_block_count))
+
 
 # BLOCKS UTILS
 
-
-def getBlocksRecursively(rootFolder):
-    for file in os.listdir(rootFolder):
+def get_blocks_recursively(root_folder):
+    for file in os.listdir(root_folder):
         if file.endswith('.obj'):
             splitted = file.split(".")
-            blockName = splitted[0]
-            blockMeshAbsolutePath = rootFolder + "/" + file
-            blockNameToObjPath[blockName] = blockMeshAbsolutePath
+            block_name = splitted[0]
+            block_mesh_absolute_path = root_folder + "/" + file
+            block_name_to_obj_path[block_name] = block_mesh_absolute_path
 
-    subFolders = [f.path for f in os.scandir(rootFolder) if f.is_dir()]
-    for subFolder in subFolders:
-        getBlocksRecursively(subFolder)
-
-
-def getBlocksMeshes(rootFolder):
-    getBlocksRecursively(rootFolder)
-    print("Found", len(blockNameToObjPath),
-          "block meshes in folder", rootFolder)
+    sub_folders = [f.path for f in os.scandir(root_folder) if f.is_dir()]
+    for sub_folder in sub_folders:
+        get_blocks_recursively(sub_folder)
 
 
-def getTextures(texturesPath):
-    for file in os.listdir(texturesPath):
+def get_blocks_meshes(root_folder):
+    get_blocks_recursively(root_folder)
+    print("Found", len(block_name_to_obj_path),
+          "block meshes in folder", root_folder)
+
+
+def get_textures(textures_path):
+    for file in os.listdir(textures_path):
         if file.endswith('.dds'):
-            textureBaseName = ""
+            texture_base_name = ""
             if '_' in file:
-                textureBaseName = file.split("_")[0]
+                texture_base_name = file.split("_")[0]
             elif "." in file:
-                textureBaseName = file.split(".")[0]
+                texture_base_name = file.split(".")[0]
 
-            if len(textureBaseName) > 0 and textureBaseName not in textures:
-                textures[textureBaseName] = []
-            if textures[textureBaseName] != None:
-                textures[textureBaseName].append(file)
+            if len(texture_base_name) > 0 and texture_base_name not in textures:
+                textures[texture_base_name] = []
+            if textures[texture_base_name] != None:
+                textures[texture_base_name].append(file)
 
-    print("Found", len(textures), "textures in folder", texturesPath)
+    print("Found", len(textures), "textures in folder", textures_path)
 
 
-def CheckUserInputs():
+def check_user_inputs():
     if bpy.context.scene.json_file != "":
-        if blocksJson is None:
-            loadMapJson(bpy.context.scene.json_file)
+        if blocks_json is None:
+            load_map_json(bpy.context.scene.json_file)
     if bpy.context.scene.obj_folder != "":
-        if len(blockNameToObjPath) == 0:
-            getBlocksMeshes(bpy.context.scene.obj_folder)
+        if len(block_name_to_obj_path) == 0:
+            get_blocks_meshes(bpy.context.scene.obj_folder)
     if bpy.context.scene.dds_folder != "":
         if len(textures) == 0:
-            getTextures(bpy.context.scene.dds_folder)
+            get_textures(bpy.context.scene.dds_folder)
 # MAIN
 
 
@@ -157,7 +150,7 @@ class MyAddonBrowseJSON(bpy.types.Operator):
     def execute(self, context):
         context.scene.json_file = self.filepath
         print("Selected JSON file: " + self.filepath)
-        loadMapJson(self.filepath)
+        load_map_json(self.filepath)
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -174,7 +167,7 @@ class MyAddonBrowseOBJ(bpy.types.Operator):
 
     def execute(self, context):
         context.scene.obj_folder = self.filepath
-        getBlocksMeshes(self.filepath)
+        get_blocks_meshes(self.filepath)
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -191,7 +184,7 @@ class MyAddonBrowseDDS(bpy.types.Operator):
 
     def execute(self, context):
         context.scene.dds_folder = self.filepath
-        getTextures(self.filepath)
+        get_textures(self.filepath)
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -205,70 +198,70 @@ class MyAddonBuildMap(bpy.types.Operator):
     bl_label = "Build map"
 
     def execute(self, context):
-        CheckUserInputs()
-        BuildMap()
+        check_user_inputs()
+        build_map()
         return {'FINISHED'}
 
 
-# Dictionary to store the imported mesh objects
-
-
-def PlaceBlocks():
+def place_blocks():
     start = time.time()
 
     # Loop over the blocks and import the corresponding mesh objects
-    all_named_blocks = blocksJson['nadeoBlocks'] + blocksJson['freeModeBlocks']
+    all_named_blocks = blocks_json['nadeoBlocks'] + \
+        blocks_json['freeModeBlocks']\
+
     for block in all_named_blocks:
-        blockName = block['name']
-        if blockName not in blockNameToMeshObj:
-            blockPath = blockNameToObjPath.get(blockName)
-            if blockPath:
-                bpy.ops.import_scene.obj(filepath=blockPath)
+        block_name = block['name']
+        if block_name not in block_name_to_mesh_obj:
+            block_path = block_name_to_obj_path.get(block_name)
+            if block_path:
+                bpy.ops.import_scene.obj(filepath=block_path)
                 mesh_obj = bpy.context.selected_objects[0]
-                blockNameToMeshObj[blockName] = mesh_obj
+                block_name_to_mesh_obj[block_name] = mesh_obj
 
     # Loop over the blocks and create instances of the mesh objects
-    for nadeoBlock in blocksJson['nadeoBlocks']:
-        blockName = nadeoBlock['name']
+    for nadeo_block in blocks_json['nadeoBlocks']:
+        block_name = nadeo_block['name']
 
-        if blockName in blockNameToMeshObj:
-            mesh_obj = blockNameToMeshObj[blockName]
+        if block_name in block_name_to_mesh_obj:
+            mesh_obj = block_name_to_mesh_obj[block_name]
 
-            position = (nadeoBlock['pos'][0],
-                        nadeoBlock['pos'][1], nadeoBlock['pos'][2])
+            position = calc_block_coord(nadeo_block)
 
-            realPos = calcBlockCoord(nadeoBlock)
+            rotation = Euler((0,
+                              (math.pi / 2) * (4 - ((nadeo_block['dir']) % 4)),
+                              0))
 
-            realRot = Euler(
-                (0, (math.pi / 2) * (4 - ((nadeoBlock['dir']) % 4)), 0), 'ZYX')
+            rotation_mode = "XYZ"
 
             # Create an instance of the mesh object
             instance = mesh_obj.copy()
             instance.data = mesh_obj.data.copy()
-            instance.location = realPos
-            instance.rotation_euler = realRot
-            instance.name = blockName
+            instance.location = position
+            instance.rotation_euler = rotation
+            instance.rotation_mode = rotation_mode
+            instance.name = block_name
 
             # Link the instance to the current collection
             bpy.context.collection.objects.link(instance)
 
             # print("Placed", blockName, "at position", realPos)
         else:
-            print(blockName, "not in mesh dict")
+            print(block_name, "not in mesh dict")
 
-    for freeModeBlock in blocksJson['freeModeBlocks']:
-        blockName = freeModeBlock['name']
+    for freemode_block in blocks_json['freeModeBlocks']:
+        block_name = freemode_block['name']
 
-        if blockName in blockNameToMeshObj:
-            mesh_obj = blockNameToMeshObj[blockName]
+        if block_name in block_name_to_mesh_obj:
+            mesh_obj = block_name_to_mesh_obj[block_name]
 
-            position = (freeModeBlock['pos'][0],
-                        freeModeBlock['pos'][1],
-                        freeModeBlock['pos'][2])
+            position = (freemode_block['pos'][0],
+                        freemode_block['pos'][1],
+                        freemode_block['pos'][2])
 
-            rotation = Euler((freeModeBlock['rot'][1],
-                              freeModeBlock['rot'][0],
-                              freeModeBlock['rot'][2]))
+            rotation = Euler((freemode_block['rot'][1],
+                              freemode_block['rot'][0],
+                              freemode_block['rot'][2]))
 
             rotation_mode = 'XZY'  # Experiment with rotations, not working yet
 
@@ -278,14 +271,14 @@ def PlaceBlocks():
             instance.location = position
             instance.rotation_euler = rotation
             instance.rotation_mode = rotation_mode
-            instance.name = blockName
+            instance.name = block_name
 
             # Link the instance to the current collection
             bpy.context.collection.objects.link(instance)
 
             # print("Placed", blockName, "at position", realPos)
         else:
-            print(blockName, "not in mesh dict")
+            print(block_name, "not in mesh dict")
 
     # for anchoredObject in blocksJson["anchoredObjects"]:
     #     blockName = anchoredObject['name']
@@ -315,14 +308,14 @@ def PlaceBlocks():
     #     bpy.context.object.data.materials[0].diffuse_color = (1, 0, 0, 1)
 
     # Remove the imported mesh objects and only keep the instances
-    removeGeometryBlocks()
+    remove_geometry_blocks()
 
     end = time.time()
-    print("Placed", len(blocksJson['nadeoBlocks']), "blocks in",
+    print("Placed", len(blocks_json['nadeoBlocks']), "blocks in",
           end - start, "seconds")
 
 
-def AddTextures():
+def add_textures():
     start = time.time()
 
     texture_dict = {}
@@ -332,41 +325,41 @@ def AddTextures():
         # Iterate through every material applied to the object
         for i in range(len(object.data.materials)):
             material = object.data.materials[i]
-            materialPathSplit = material.name.split("\\")
-            materialName = materialPathSplit[-1]
-            materialNameBase = str(materialName).split(".")[0]
+            material_path_split = material.name.split("\\")
+            material_name = material_path_split[-1]
+            material_name_base = str(material_name).split(".")[0]
 
-            hasTexture = materialNameBase in textures
+            has_texture = material_name_base in textures
 
-            if hasTexture:
+            if has_texture:
                 # Check if the texture image has already been loaded
-                if materialNameBase in texture_dict:
-                    texture_image = texture_dict[materialNameBase]
+                if material_name_base in texture_dict:
+                    texture_image = texture_dict[material_name_base]
                 else:
                     texture_file_path = bpy.context.scene.dds_folder + \
-                        textures[materialNameBase][0]
+                        textures[material_name_base][0]
                     texture_image = bpy.data.images.load(texture_file_path)
-                    texture_dict[materialNameBase] = texture_image
+                    texture_dict[material_name_base] = texture_image
 
                 # Create a new material node tree and assign the texture image to the material
-                mat = bpy.data.materials.new(name=materialNameBase)
+                mat = bpy.data.materials.new(name=material_name_base)
                 mat.use_nodes = True
                 bsdf = mat.node_tree.nodes["Principled BSDF"]
-                texImage = mat.node_tree.nodes.new('ShaderNodeTexImage')
-                texImage.image = texture_image
+                tex_image = mat.node_tree.nodes.new('ShaderNodeTexImage')
+                tex_image.image = texture_image
                 mat.node_tree.links.new(
-                    bsdf.inputs['Base Color'], texImage.outputs['Color'])
+                    bsdf.inputs['Base Color'], tex_image.outputs['Color'])
 
                 # Assign the new material to the object
                 object.data.materials[i] = mat
             else:
-                print("No texture for", materialNameBase)
+                print("No texture for", material_name_base)
 
     end = time.time()
     print("Added textures in", end - start, "seconds")
 
 
-def RotateBlocks():
+def rotate_blocks():
     start = time.time()
 
     # Loop through all the objects and rotate them
@@ -381,25 +374,25 @@ def RotateBlocks():
     print("Rotated blocks in", end - start, "seconds")
 
 
-def BuildMap():
+def build_map():
     """Function to build the map"""
 
-    setViewportClips(1, 50000)
+    set_viewport_clips(1, 50000)
     print("Building map...")
 
-    deleteAllObjects()
+    delete_all_objects()
 
     # clear the mesh object dictionary as it is referencing objects that have been deleted
-    blockNameToMeshObj.clear()
+    block_name_to_mesh_obj.clear()
 
-    PlaceBlocks()
-    AddTextures()
+    place_blocks()
+    add_textures()
 
-    removeCollisionsBlocks()
+    remove_collisions_blocks()
 
-    RotateBlocks()
+    rotate_blocks()
 
-    viewSelectedObjects()
+    view_selected_objects()
 
 
 def register():
@@ -422,4 +415,4 @@ def unregister():
     del bpy.types.Scene.json_file
     del bpy.types.Scene.obj_folder
     del bpy.types.Scene.dds_folder
-    blockNameToMeshObj.clear()
+    block_name_to_mesh_obj.clear()
