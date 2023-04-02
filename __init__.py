@@ -338,6 +338,7 @@ def add_textures():
 
     texture_dict = {}
     materials_dict = {}
+    missing_materials = []
 
     # Iterate through every object in the scene
     for object in bpy.context.scene.objects:
@@ -375,8 +376,9 @@ def add_textures():
 
                 # Assign the new material to the object
                 object.data.materials[i] = mat
-            else:
+            elif material_name_base not in missing_materials:
                 print("No texture for", material_name_base)
+                missing_materials.append(material_name_base)
 
     end = time.time()
     print("Added textures in", end - start, "seconds")
