@@ -208,7 +208,8 @@ def place_blocks():
 
     # Loop over the blocks and import the corresponding mesh objects
     all_named_blocks = blocks_json['nadeoBlocks'] + \
-        blocks_json['freeModeBlocks']\
+        blocks_json['freeModeBlocks'] + \
+        blocks_json["anchoredObjects"]
 
     for block in all_named_blocks:
         block_name = block['name']
@@ -280,18 +281,8 @@ def place_blocks():
         else:
             print(block_name, "not in mesh dict")
 
-    # for anchoredObject in blocksJson["anchoredObjects"]:
-    #     blockName = anchoredObject['name']
-
-    #     position = (anchoredObject['pos'][0],
-    #                 anchoredObject['pos'][1],
-    #                 anchoredObject['pos'][2])
-
-    #     rotation = Euler(euler_angles(anchoredObject['pitch'],
-    #                                   anchoredObject['yaw'],
-    #                                   anchoredObject['roll']))
-
-    #     rotation_mode = 'ZYX'
+    # for anchored_object in blocks_json["anchoredObjects"]:
+    #     block_name = anchored_object['name']
 
     #     # Place cube at position of the anchored object, with correct rotation
     #     bpy.ops.mesh.primitive_cone_add(location=position,
@@ -299,13 +290,40 @@ def place_blocks():
     #                                     scale=(2.0, 2.0, 2.0))
     #     bpy.context.object.rotation_euler = rotation
     #     bpy.context.object.rotation_mode = rotation_mode
-    #     bpy.context.object.name = blockName
-    #     bpy.context.object.name = blockName
+    #     bpy.context.object.name = block_name
 
     #     # Color the cube red
     #     bpy.context.object.data.materials.append(
     #         bpy.data.materials.new(name="Red"))
     #     bpy.context.object.data.materials[0].diffuse_color = (1, 0, 0, 1)
+
+    #     if block_name in block_name_to_mesh_obj:
+    #         mesh_obj = block_name_to_mesh_obj[block_name]
+
+    #         position = (anchored_object['pos'][0],
+    #                     anchored_object['pos'][1],
+    #                     anchored_object['pos'][2])
+
+    #         rotation = Euler((anchored_object['pitch'],
+    #                           anchored_object['yaw'],
+    #                           anchored_object['roll']))
+
+    #         rotation_mode = 'YXZ'
+
+    #         # Create an instance of the mesh object
+    #         instance = mesh_obj.copy()
+    #         instance.data = mesh_obj.data.copy()
+    #         instance.location = position
+    #         instance.rotation_euler = rotation
+    #         instance.rotation_mode = rotation_mode
+    #         instance.name = block_name
+
+    #         # Link the instance to the current collection
+    #         bpy.context.collection.objects.link(instance)
+
+    #     # print("Placed", blockName, "at position", realPos)
+    #     else:
+    #         print(block_name, "not in mesh dict")
 
     # Remove the imported mesh objects and only keep the instances
     remove_geometry_blocks()
