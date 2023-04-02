@@ -337,6 +337,7 @@ def add_textures():
     start = time.time()
 
     texture_dict = {}
+    materials_dict = {}
 
     # Iterate through every object in the scene
     for object in bpy.context.scene.objects:
@@ -359,14 +360,18 @@ def add_textures():
                     texture_image = bpy.data.images.load(texture_file_path)
                     texture_dict[material_name_base] = texture_image
 
-                # Create a new material node tree and assign the texture image to the material
-                mat = bpy.data.materials.new(name=material_name_base)
-                mat.use_nodes = True
-                bsdf = mat.node_tree.nodes["Principled BSDF"]
-                tex_image = mat.node_tree.nodes.new('ShaderNodeTexImage')
-                tex_image.image = texture_image
-                mat.node_tree.links.new(
-                    bsdf.inputs['Base Color'], tex_image.outputs['Color'])
+                if material_name_base in materials_dict:
+                    mat = materials_dict[material_name_base]
+                else:
+                    # Create a new material node tree and assign the texture image to the material
+                    mat = bpy.data.materials.new(name=material_name_base)
+                    mat.use_nodes = True
+                    bsdf = mat.node_tree.nodes["Principled BSDF"]
+                    tex_image = mat.node_tree.nodes.new('ShaderNodeTexImage')
+                    tex_image.image = texture_image
+                    mat.node_tree.links.new(
+                        bsdf.inputs['Base Color'], tex_image.outputs['Color'])
+                    materials_dict[material_name_base] = mat
 
                 # Assign the new material to the object
                 object.data.materials[i] = mat
