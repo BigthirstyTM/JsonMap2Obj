@@ -76,7 +76,7 @@ def get_blocks_meshes(root_folder):
 
 def get_textures(textures_path):
     for file in os.listdir(textures_path):
-        if file.endswith('.dds'):
+        if file.endswith('.dds') or file.endswith('.png'):
             texture_base_name = ""
             if '_' in file:
                 texture_base_name = file.split("_")[0]
@@ -138,6 +138,80 @@ class MyAddonPanel(bpy.types.Panel):
         layout.label(text="Build map:")
         row = layout.row()
         row.operator("myaddon.build_map", text="Build")
+
+        # Add a button to browse for the block output folder
+        layout.label(text="Browse for blocks output folder:")
+        row = layout.row()
+        row.prop(context.scene, "block_folder_output", text="")
+        row.operator("myaddon.browse_block_folder_output", text="Browse")
+
+        # Add a button to place a single block
+        layout.separator()
+        row = layout.row()
+        row.prop(context.scene, "my_string")
+        row.operator("my.print_string", text="Export block")
+
+        # Add a button to place and export every block
+        layout.separator()
+        layout.label(text="Export all blocks:")
+        row = layout.row()
+        row.operator("myaddon.export_all_blocks", text="Export")
+
+
+def update_single_block_name(self, context):
+    global my_string
+    my_string = context.scene.my_string
+
+
+def build_single_block(block_name):
+    delete_all_objects()
+    block_path = block_name_to_obj_path.get(block_name)
+
+    if block_path:
+        bpy.ops.import_scene.obj(filepath=block_path)
+        mesh_obj = bpy.context.selected_objects[0]
+        block_name_to_mesh_obj[block_name] = mesh_obj
+        add_textures()
+
+
+def export_all_blocks():
+    for block_name in block_name_to_obj_path:
+        build_single_block(block_name)
+        export_single_block(block_name)
+
+
+def export_single_block(block_name):
+    block_path = bpy.context.scene.block_folder_output + "/" + block_name + ".obj"
+    print("Exporting block", block_name, "to path", block_path)
+    bpy.ops.export_scene.obj(filepath=block_path)
+
+    # replace mtl texture paths with relative paths
+    mtl_path = bpy.context.scene.block_folder_output + "/" + block_name + ".mtl"
+    with open(mtl_path, "r") as mtl_file:
+        mtl_lines = mtl_file.readlines()
+    with open(mtl_path, "w") as mtl_file:
+        for line in mtl_lines:
+            if line.startswith("map_Kd"):
+                # map_Kd D:\\Downloads\\DefaultTextures\\Image_PNG\\DecoHill2_D.png
+                line = "map_Kd textures\\\\" + line.split("\\")[-1]
+            mtl_file.write(line)
+
+
+class EXPORT_SINGLE_BLOCK_OT_OPTERATOR(bpy.types.Operator):
+    """Export single block"""
+    bl_idname = "my.print_string"
+    bl_label = "Export single block"
+
+    def execute(self, context):
+        global my_string
+        global block_name_to_mesh_obj
+
+        # delete_all_objects()
+
+        block_name = context.scene.my_string
+        build_single_block(block_name)
+        export_single_block(block_name)
+        return {'FINISHED'}
 
 
 class MyAddonBrowseJSON(bpy.types.Operator):
@@ -201,6 +275,32 @@ class MyAddonBuildMap(bpy.types.Operator):
         check_user_inputs()
         build_map()
         return {'FINISHED'}
+
+
+class MyAddonExportAllBlocks(bpy.types.Operator):
+    """Operator to export all blocks"""
+    bl_idname = "myaddon.export_all_blocks"
+    bl_label = "Export all blocks"
+
+    def execute(self, context):
+        export_all_blocks()
+        return {'FINISHED'}
+
+
+class MyAddonBrowseBlockFolderOutput(bpy.types.Operator):
+    """Operator to browse for the block folder output"""
+    bl_idname = "myaddon.browse_block_folder_output"
+    bl_label = "Browse for block folder output"
+
+    filepath: bpy.props.StringProperty(subtype="DIR_PATH")
+
+    def execute(self, context):
+        context.scene.block_folder_output = self.filepath
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
 
 
 def place_blocks():
@@ -426,9 +526,20 @@ def register():
     bpy.utils.register_class(MyAddonBrowseOBJ)
     bpy.utils.register_class(MyAddonBrowseDDS)
     bpy.utils.register_class(MyAddonBuildMap)
+    bpy.utils.register_class(MyAddonBrowseBlockFolderOutput)
+    bpy.utils.register_class(EXPORT_SINGLE_BLOCK_OT_OPTERATOR)
+    bpy.utils.register_class(MyAddonExportAllBlocks)
+
     bpy.types.Scene.json_file = StringProperty(name="JSON File")
     bpy.types.Scene.obj_folder = StringProperty(name="OBJ Folder")
     bpy.types.Scene.dds_folder = StringProperty(name="DDS Folder")
+    bpy.types.Scene.block_folder_output = StringProperty(
+        name="Block Output Folder")
+    bpy.types.Scene.my_string = bpy.props.StringProperty(
+        name="Block Name",
+        default="",
+        update=update_single_block_name
+    )
 
 
 def unregister():
@@ -437,7 +548,11 @@ def unregister():
     bpy.utils.unregister_class(MyAddonBrowseOBJ)
     bpy.utils.unregister_class(MyAddonBrowseDDS)
     bpy.utils.unregister_class(MyAddonBuildMap)
+    bpy.utils.unregister_class(MyAddonBrowseBlockFolderOutput)
+    bpy.utils.unregister_class(EXPORT_SINGLE_BLOCK_OT_OPTERATOR)
+    bpy.utils.unregister_class(MyAddonExportAllBlocks)
     del bpy.types.Scene.json_file
     del bpy.types.Scene.obj_folder
     del bpy.types.Scene.dds_folder
+    del bpy.types.Scene.block_folder_output
     block_name_to_mesh_obj.clear()
