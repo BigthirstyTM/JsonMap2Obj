@@ -16,14 +16,13 @@ bl_info = {
     "name": "JsonMap2Obj",
     "author": "Team Dojo",
     "description": "Recreate any map, automatically, block by block",
-    "blender": (3, 4, 1),
-    "version": (0, 0, 1),
+    "blender": (4, 3, 0),  # Updated to match your Blender version
+    "version": (0, 0, 2),
     "location": "View3D",
     "warning": "",
-    "category": "Trackmania"
+    "category": "Trackmania",
+    "doc_url": "https://github.com/BigthirstyTM/JsonMap2Obj"
 }
-
-
 # GLOBALS
 
 block_name_to_mesh_obj = {}
@@ -111,9 +110,11 @@ class MyAddonPanel(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = "JsonMap2Obj"
+    bl_options = {'DEFAULT_CLOSED'}  # Added for better UX in Blender 4
 
     def draw(self, context):
         layout = self.layout
+        # ... (rest of the panel code remains the same)
 
         # Add a button to browse for the map JSON file
         layout.label(text="Browse for map JSON file:")
@@ -168,11 +169,17 @@ def build_single_block(block_name):
     block_path = block_name_to_obj_path.get(block_name)
 
     if block_path:
-        bpy.ops.import_scene.obj(filepath=block_path)
-        mesh_obj = bpy.context.selected_objects[0]
-        block_name_to_mesh_obj[block_name] = mesh_obj
-        add_textures()
-
+        try:
+            # Changed from import_scene.obj to wm.obj_import
+            bpy.ops.wm.obj_import(filepath=block_path)
+            if bpy.context.selected_objects:
+                mesh_obj = bpy.context.selected_objects[0]
+                block_name_to_mesh_obj[block_name] = mesh_obj
+                add_textures()
+            else:
+                print(f"Warning: No objects were imported for block {block_name}")
+        except Exception as e:
+            print(f"Error importing block {block_name}: {str(e)}")
 
 def export_all_blocks():
     for block_name in block_name_to_obj_path:
@@ -316,9 +323,16 @@ def place_blocks():
         if block_name not in block_name_to_mesh_obj:
             block_path = block_name_to_obj_path.get(block_name)
             if block_path:
-                bpy.ops.import_scene.obj(filepath=block_path)
-                mesh_obj = bpy.context.selected_objects[0]
-                block_name_to_mesh_obj[block_name] = mesh_obj
+                try:
+                    # Changed from import_scene.obj to wm.obj_import
+                    bpy.ops.wm.obj_import(filepath=block_path)
+                    if bpy.context.selected_objects:
+                        mesh_obj = bpy.context.selected_objects[0]
+                        block_name_to_mesh_obj[block_name] = mesh_obj
+                    else:
+                        print(f"Warning: No objects were imported for block {block_name}")
+                except Exception as e:
+                    print(f"Error importing block {block_name}: {str(e)}")
 
     # Loop over the blocks and create instances of the mesh objects
     for nadeo_block in blocks_json['nadeoBlocks']:
@@ -442,9 +456,15 @@ def add_textures():
 
     # Iterate through every object in the scene
     for object in bpy.context.scene.objects:
+        if not hasattr(object.data, "materials"):
+            continue
+            
         # Iterate through every material applied to the object
         for i in range(len(object.data.materials)):
             material = object.data.materials[i]
+            if not material:
+                continue
+                
             material_path_split = material.name.split("\\")
             material_name = material_path_split[-1]
             material_name_base = str(material_name).split(".")[0]
@@ -458,8 +478,12 @@ def add_textures():
                 else:
                     texture_file_path = bpy.context.scene.dds_folder + \
                         textures[material_name_base][0]
-                    texture_image = bpy.data.images.load(texture_file_path)
-                    texture_dict[material_name_base] = texture_image
+                    try:
+                        texture_image = bpy.data.images.load(texture_file_path)
+                        texture_dict[material_name_base] = texture_image
+                    except:
+                        print(f"Warning: Could not load texture {texture_file_path}")
+                        continue
 
                 if material_name_base in materials_dict:
                     mat = materials_dict[material_name_base]
